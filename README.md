@@ -1,5 +1,5 @@
 yii2-sweetalert2
-===================
+====================
 yii2-sweetalert2
 
 Installation
