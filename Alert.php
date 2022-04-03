@@ -3,7 +3,7 @@
 namespace zzbajie\sweetalert2;
 
 use Yii;
-use yii\bootstrap\Widget;
+use yii\bootstrap4\Widget;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 use zzbajie\sweetalert2\assets\SweetAlert2Asset;
@@ -84,9 +84,13 @@ class Alert extends Widget
      */
     public function initSwal($options = '', $callback = '')
     {
-        $view = $this->getView();
-        $js = "Swal.fire({$options}).then({$callback}).catch(swal.noop);";
-        $this->view->registerJs($js, $view::POS_END);
+        if ($this->hasTitle()) {
+            $view = $this->getView();
+            $js = "Swal.fire({$options}).then({$callback}).catch(swal.noop);";
+            $this->view->registerJs($js, $view::POS_END);
+        } else {
+            //throw new InvalidConfigException("The 'title' option is required.");
+        }
     }
 
     /**
@@ -109,12 +113,12 @@ class Alert extends Widget
     {
         $flashes = $session->getAllFlashes();
         $steps = [];
-        foreach ($flashes as $type => $data) {
+        foreach ($flashes as $icon => $data) {
             $data = (array)$data;
             foreach ($data as $message) {
-                array_push($steps, ['type' => $type, 'text' => $message]);
+                array_push($steps, ['icon' => $icon, 'text' => $message]);
             }
-            $session->removeFlash($type);
+            $session->removeFlash($icon);
         }
         return $steps;
     }
@@ -126,7 +130,7 @@ class Alert extends Widget
     {
         $params = [];
         if ($params['options'] = $steps[0]['text']) {
-            $params['options']['type'] = isset($params['options']['type']) ? $params['options']['type'] : $steps[0]['type'];
+            $params['options']['icon'] = isset($params['options']['icon']) ? $params['options']['icon'] : $steps[0]['icon'];
             $params['callback'] = isset($steps[1]['text']['callback']) ? $steps[1]['text']['callback'] : $this->callback;
             $this->options = $params['options'];
             $this->callback = $params['callback'];
@@ -136,7 +140,6 @@ class Alert extends Widget
 
     /**
      * Get widget options
-     *
      * @return string
      */
     public function getOptions()
@@ -155,10 +158,19 @@ class Alert extends Widget
     }
 
     /**
-     * @return bool|mixed|\yii\web\Session
+     * @return bool|mixed|object|\yii\web\Session|null
      */
     private function getSession()
     {
         return $this->useSessionFlash ? Yii::$app->session : false;
+    }
+
+    /**
+     * @return bool
+     */
+    private function hasTitle()
+    {
+        $title = ArrayHelper::getValue($this->options, 'title');
+        return !empty($title);
     }
 }
